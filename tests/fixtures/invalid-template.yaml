@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: An invalid CloudFormation template for testing cfn-lint error detection
+
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-test-bucket
+      InvalidProperty: this-property-does-not-exist
+      AnotherInvalidProp: also-invalid

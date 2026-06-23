@@ -1,0 +1,34 @@
+name: Test cfn-lint with invalid CloudFormation template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: push
+      GITHUB_REF: refs/heads/main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run cfn-lint on invalid template
+        id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: error
+          working_directory: "tests/fixtures"
+          cfn_lint_args: "invalid-template.yaml"
+
+      - name: Assert action detected errors
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail on invalid template with fail_level=error, but got outcome: $OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly detected errors in invalid template"
