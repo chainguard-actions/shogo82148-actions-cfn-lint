@@ -1,0 +1,28 @@
+name: Test cfn-lint with custom options
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run cfn-lint with custom tool name and level
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          level: warning
+          tool_name: cfn-lint-custom
+          working_directory: tests/fixtures
+          cfn_lint_args: valid-template.yaml
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Assert action completed successfully
+        run: |
+          echo "cfn-lint action with custom options completed"
+          echo "PASS"
