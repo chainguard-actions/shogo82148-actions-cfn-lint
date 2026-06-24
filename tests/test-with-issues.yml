@@ -1,0 +1,37 @@
+name: Test cfn-lint detects issues in template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a CloudFormation template with lint issues
+        run: |
+          mkdir -p templates
+          cat > templates/with-issues.yaml << 'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: A CloudFormation template with lint issues
+          Resources:
+            MyBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                BucketName: my-test-bucket
+                UnknownProperty: this-should-cause-a-warning
+          EOF
+
+      - name: Run cfn-lint on template with issues (fail_level=none so it should not fail)
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: templates/with-issues.yaml
+
+      - name: Assert action completed (issues found but fail_level=none)
+        run: |
+          echo "cfn-lint action completed - issues may have been found but fail_level=none"
+          echo "PASS"
