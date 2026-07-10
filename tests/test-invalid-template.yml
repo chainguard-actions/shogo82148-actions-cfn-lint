@@ -1,0 +1,39 @@
+name: Test with invalid CloudFormation template (fail_level none)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create invalid CloudFormation template
+        run: |
+          mkdir -p tests/fixtures/cfn
+          cat > tests/fixtures/cfn/invalid-template.yaml << 'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: An invalid CloudFormation template with issues
+          Resources:
+            MyBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                InvalidProperty: this-property-does-not-exist
+                BucketName: my-test-bucket
+          EOF
+
+      - name: Run cfn-lint on invalid template with fail_level none
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: tests/fixtures/cfn/invalid-template.yaml
+
+      - name: Assert action completed (fail_level=none means no exit 1 even with issues)
+        run: |
+          echo "PASS: action completed with fail_level=none even when lint issues found"

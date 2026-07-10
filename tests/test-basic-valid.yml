@@ -1,0 +1,38 @@
+name: Test basic usage with valid CloudFormation template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create valid CloudFormation template
+        run: |
+          mkdir -p tests/fixtures/cfn
+          cat > tests/fixtures/cfn/valid-template.yaml << 'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: A simple valid CloudFormation template
+          Resources:
+            MyBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                BucketName: my-test-bucket
+          EOF
+
+      - name: Run cfn-lint on valid template
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: error
+          cfn_lint_args: tests/fixtures/cfn/valid-template.yaml
+
+      - name: Assert action succeeded
+        run: |
+          echo "PASS: action completed without error for valid template"

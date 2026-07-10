@@ -1,0 +1,39 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create CloudFormation template in subdirectory
+        run: |
+          mkdir -p tests/fixtures/cfn-subdir
+          cat > tests/fixtures/cfn-subdir/stack.yaml << 'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: A valid CloudFormation template in a subdirectory
+          Resources:
+            MyQueue:
+              Type: AWS::SQS::Queue
+              Properties:
+                QueueName: my-test-queue
+          EOF
+
+      - name: Run cfn-lint with working_directory set
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: error
+          working_directory: tests/fixtures/cfn-subdir
+          cfn_lint_args: stack.yaml
+
+      - name: Assert action succeeded with working_directory
+        run: |
+          echo "PASS: action completed successfully using working_directory input"
