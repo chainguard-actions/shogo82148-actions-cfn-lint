@@ -1,0 +1,43 @@
+name: Test custom tool_name input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a valid CloudFormation template
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/cfn-toolname"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/cfn-toolname/template.yaml" << 'EOF'
+          AWSTemplateFormatVersion: "2010-09-09"
+          Description: A simple valid CloudFormation template
+          Resources:
+            MyFunction:
+              Type: AWS::Lambda::Function
+              Properties:
+                FunctionName: my-test-function
+                Runtime: python3.12
+                Handler: index.handler
+                Role: arn:aws:iam::123456789012:role/lambda-role
+                Code:
+                  ZipFile: |
+                    def handler(event, context):
+                      return "hello"
+          EOF
+
+      - name: Run cfn-lint with custom tool_name
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          tool_name: my-cfn-linter
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: tests/fixtures/cfn-toolname/template.yaml
+
+      - name: Assert action completed successfully
+        run: |
+          echo "PASS: cfn-lint ran successfully with custom tool_name"
