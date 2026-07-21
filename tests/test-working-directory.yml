@@ -1,0 +1,54 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create CloudFormation template in subdirectory
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/infra/cloudformation"
+          cat > "$GITHUB_WORKSPACE/infra/cloudformation/stack.yaml" << 'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: A valid CloudFormation stack template
+          Parameters:
+            Environment:
+              Type: String
+              Default: dev
+              AllowedValues:
+                - dev
+                - staging
+                - prod
+          Resources:
+            MyQueue:
+              Type: AWS::SQS::Queue
+              Properties:
+                QueueName: !Sub 'my-queue-${Environment}'
+          EOF
+
+      - name: Set up git origin reachable inside Docker container
+        run: |
+          git config user.email "test@example.com"
+          git config user.name "Test User"
+          rm -rf "$GITHUB_WORKSPACE/.git-remote"
+          git init --bare "$GITHUB_WORKSPACE/.git-remote"
+          git push "$GITHUB_WORKSPACE/.git-remote" HEAD:refs/heads/act-harness
+          git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
+            git remote add origin "$GITHUB_WORKSPACE/.git-remote"
+
+      - id: cfn-lint
+        name: Run cfn-lint with working_directory set
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          working_directory: infra/cloudformation
+          cfn_lint_args: stack.yaml
+
+      - name: Assert action completed with working_directory
+        run: |
+          echo "PASS: cfn-lint ran successfully using working_directory input"

@@ -1,0 +1,45 @@
+name: Test basic usage with valid CloudFormation template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create valid CloudFormation template
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/cfn-templates"
+          cat > "$GITHUB_WORKSPACE/cfn-templates/valid.yaml" << 'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: A simple valid CloudFormation template
+          Resources:
+            MyBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                BucketName: my-test-bucket
+          EOF
+
+      - name: Set up git origin reachable inside Docker container
+        run: |
+          git config user.email "test@example.com"
+          git config user.name "Test User"
+          rm -rf "$GITHUB_WORKSPACE/.git-remote"
+          git init --bare "$GITHUB_WORKSPACE/.git-remote"
+          git push "$GITHUB_WORKSPACE/.git-remote" HEAD:refs/heads/act-harness
+          git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
+            git remote add origin "$GITHUB_WORKSPACE/.git-remote"
+
+      - id: cfn-lint
+        name: Run cfn-lint on valid template
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: cfn-templates/valid.yaml
+
+      - name: Assert action succeeded
+        run: |
+          echo "PASS: cfn-lint ran successfully on valid template"
