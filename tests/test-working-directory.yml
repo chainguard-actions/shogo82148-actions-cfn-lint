@@ -1,0 +1,47 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up git origin reachable inside Docker container
+        run: |
+          git config user.email "test@example.com"
+          git config user.name "Test User"
+          rm -rf "$GITHUB_WORKSPACE/.git-remote"
+          git init --bare "$GITHUB_WORKSPACE/.git-remote"
+          git push "$GITHUB_WORKSPACE/.git-remote" HEAD:refs/heads/act-harness
+          git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
+            git remote add origin "$GITHUB_WORKSPACE/.git-remote"
+
+      - name: Create CloudFormation templates in a subdirectory
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/subdir/cfn"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/subdir/cfn/bucket.yaml" << 'EOF'
+          AWSTemplateFormatVersion: "2010-09-09"
+          Description: S3 Bucket Template
+
+          Resources:
+            DataBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                BucketName: my-data-bucket
+                VersioningConfiguration:
+                  Status: Enabled
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          working_directory: tests/fixtures/subdir/cfn
+
+      - name: Assert action succeeded with working_directory
+        run: |
+          echo "PASS: action completed successfully using working_directory input"
