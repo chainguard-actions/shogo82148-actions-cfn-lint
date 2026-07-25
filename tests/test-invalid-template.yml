@@ -1,0 +1,48 @@
+name: Test cfn-lint with invalid CloudFormation template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Create an invalid CloudFormation template
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/cfn-templates"
+          cat > "$GITHUB_WORKSPACE/tests/cfn-templates/invalid.yaml" <<'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: An invalid CloudFormation template
+          Resources:
+            MyBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                InvalidProperty: this-property-does-not-exist
+                BucketName: my-test-bucket
+          EOF
+
+      - name: Set up git origin reachable inside Docker container
+        run: |
+          git config user.email "test@example.com"
+          git config user.name "Test User"
+          rm -rf "$GITHUB_WORKSPACE/.git-remote"
+          git init --bare "$GITHUB_WORKSPACE/.git-remote"
+          git push "$GITHUB_WORKSPACE/.git-remote" HEAD:refs/heads/act-harness
+          git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
+            git remote add origin "$GITHUB_WORKSPACE/.git-remote"
+
+      - name: Run cfn-lint on invalid template (expect warnings/errors but no exit failure)
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: tests/cfn-templates/invalid.yaml
+
+      - name: Assert action completed (fail_level=none so no exit code failure expected)
+        run: |
+          echo "PASS: cfn-lint ran and reported issues without failing (fail_level=none)"

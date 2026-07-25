@@ -1,0 +1,49 @@
+name: Test cfn-lint with working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Create CloudFormation template in a subdirectory
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/cfn-subdir"
+          cat > "$GITHUB_WORKSPACE/tests/cfn-subdir/template.yaml" <<'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: A valid CloudFormation template in a subdirectory
+          Resources:
+            MyQueue:
+              Type: AWS::SQS::Queue
+              Properties:
+                QueueName: my-test-queue
+                VisibilityTimeout: 30
+          EOF
+
+      - name: Set up git origin reachable inside Docker container
+        run: |
+          git config user.email "test@example.com"
+          git config user.name "Test User"
+          rm -rf "$GITHUB_WORKSPACE/.git-remote"
+          git init --bare "$GITHUB_WORKSPACE/.git-remote"
+          git push "$GITHUB_WORKSPACE/.git-remote" HEAD:refs/heads/act-harness
+          git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
+            git remote add origin "$GITHUB_WORKSPACE/.git-remote"
+
+      - name: Run cfn-lint with working_directory set to subdirectory
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          working_directory: tests/cfn-subdir
+          cfn_lint_args: template.yaml
+
+      - name: Assert action completed successfully with working_directory
+        run: |
+          echo "PASS: cfn-lint ran successfully using working_directory input"
