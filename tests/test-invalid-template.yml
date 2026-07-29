@@ -1,0 +1,23 @@
+name: Test cfn-lint with invalid CloudFormation template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run cfn-lint on invalid template (expect lint errors but action should not fail)
+        id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: tests/fixtures/invalid-template.yaml
+
+      - name: Assert action completed (fail_level=none means exit 0 even with lint errors)
+        run: |
+          echo "Action completed successfully even with lint errors (fail_level=none)"
+          echo "PASS"

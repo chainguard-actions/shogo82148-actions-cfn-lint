@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A CloudFormation template with intentional errors for testing
+
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      InvalidProperty: this-property-does-not-exist
+      BucketName: my-test-bucket-12345
