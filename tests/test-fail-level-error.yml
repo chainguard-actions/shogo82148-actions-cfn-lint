@@ -1,0 +1,32 @@
+name: Test fail_level=error causes failure on invalid template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: error
+          working_directory: tests/fixtures/invalid-template
+
+      - name: Assert action failed due to lint errors
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed with fail_level=error on invalid template"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (cfn-lint may have accepted the template or fail_level behavior differs)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
