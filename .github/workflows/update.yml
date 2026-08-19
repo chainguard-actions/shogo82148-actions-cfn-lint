@@ -1,0 +1,39 @@
+name: update
+on:
+  schedule:
+    - cron: "25 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: update requirements.txt
+        id: update
+        run: |
+          cp requirements.txt requirements.old.txt
+          make requirements
+
+          # boto3 and botocore are updated very often, so ignore them
+          diff <(grep -v -E 'boto(3|core)' requirements.old.txt) \
+            <(grep -v -E 'boto(3|core)' requirements.txt) && true
+          echo "result=$?" >> "$GITHUB_OUTPUT"
+          rm requirements.old.txt
+
+      - name: Generate token
+        id: generate_token
+        uses: shogo82148/actions-github-app-token@d75b03a80d0450d087a12b72dff2d987a4ced993 # v1.3.0
+
+      - name: commit and create a pull request
+        if: ${{ steps.update.outputs.result == '1' }}
+        uses: shogo82148/actions-commit-and-create-pr@b1322fe9da4037e9720e34ea221997cffcd3498d # v1.1.4
+        with:
+          github-token: ${{ steps.generate_token.outputs.token }}
+          commit-message: "auto update dependencies"

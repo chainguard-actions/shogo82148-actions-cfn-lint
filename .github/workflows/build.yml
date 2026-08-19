@@ -1,0 +1,49 @@
+name: build Docker Image
+
+on:
+  push:
+    branches-ignore:
+      - '**'
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Show Version
+        run: |
+          echo "VERSION=$(cat VERSION)" >> "$GITHUB_ENV"
+      - name: Build the Docker image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          docker build -t "$REPOSITORY":"$VERSION" .
+          docker build -t ghcr.io/"$REPOSITORY":"$VERSION" .
+
+      - name: Publish to Docker Hub
+        env:
+          REPOSITORY: ${{ github.repository }}
+          USERNAME: ${{ secrets.username }}
+          PASSWORD: ${{ secrets.password }}
+        run: |
+          printenv PASSWORD | docker login -u "$USERNAME" --password-stdin
+          docker push "$REPOSITORY":"$VERSION"
+          docker logout
+
+      - name: Publish to GitHub Container Registry
+        env:
+          REPOSITORY: ${{ github.repository }}
+          USERNAME: ${{ github.repository_owner }}
+          PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printenv PASSWORD | docker login ghcr.io --username "$USERNAME" --password-stdin
+          docker push ghcr.io/"$REPOSITORY":"$VERSION"
+          docker logout ghcr.io
