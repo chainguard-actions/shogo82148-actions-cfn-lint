@@ -1,4 +1,4 @@
-name: Test with custom working directory
+name: Test basic usage with valid CloudFormation template
 on:
   workflow_dispatch:
 jobs:
@@ -20,25 +20,17 @@ jobs:
           git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
             git remote add origin "$GITHUB_WORKSPACE/.git-remote"
 
-      - name: Create CloudFormation template in a subdirectory
+      - name: Create a valid CloudFormation template
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/infra/cloudformation"
-          cat > "$GITHUB_WORKSPACE/infra/cloudformation/stack.yaml" << 'EOF'
+          mkdir -p "$GITHUB_WORKSPACE/cfn-templates"
+          cat > "$GITHUB_WORKSPACE/cfn-templates/valid.yaml" << 'EOF'
           AWSTemplateFormatVersion: '2010-09-09'
-          Description: A valid CloudFormation stack template
-          Parameters:
-            Environment:
-              Type: String
-              Default: dev
-              AllowedValues:
-                - dev
-                - staging
-                - prod
+          Description: A simple valid CloudFormation template
           Resources:
-            MyQueue:
-              Type: AWS::SQS::Queue
+            MyBucket:
+              Type: AWS::S3::Bucket
               Properties:
-                QueueName: !Sub "${Environment}-my-queue"
+                BucketName: my-test-bucket
           EOF
 
       - id: action
@@ -48,10 +40,10 @@ jobs:
           reporter: local
           filter_mode: nofilter
           fail_level: none
-          working_directory: "infra/cloudformation"
-          cfn_lint_args: "stack.yaml"
+          cfn_lint_args: "$GITHUB_WORKSPACE/cfn-templates/valid.yaml"
+          working_directory: "."
 
-      - name: Assert action completed with custom working directory
+      - name: Assert action completed successfully
         run: |
-          echo "Action completed with custom working_directory=infra/cloudformation"
+          echo "Action completed without error (exit code 0)"
           echo "PASS"

@@ -1,4 +1,4 @@
-name: Test with custom working directory
+name: Test with invalid CloudFormation template (lint errors detected, no fail)
 on:
   workflow_dispatch:
 jobs:
@@ -20,25 +20,17 @@ jobs:
           git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
             git remote add origin "$GITHUB_WORKSPACE/.git-remote"
 
-      - name: Create CloudFormation template in a subdirectory
+      - name: Create an invalid CloudFormation template (missing required fields)
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/infra/cloudformation"
-          cat > "$GITHUB_WORKSPACE/infra/cloudformation/stack.yaml" << 'EOF'
+          mkdir -p "$GITHUB_WORKSPACE/cfn-templates"
+          cat > "$GITHUB_WORKSPACE/cfn-templates/invalid.yaml" << 'EOF'
           AWSTemplateFormatVersion: '2010-09-09'
-          Description: A valid CloudFormation stack template
-          Parameters:
-            Environment:
-              Type: String
-              Default: dev
-              AllowedValues:
-                - dev
-                - staging
-                - prod
+          Description: An invalid CloudFormation template
           Resources:
-            MyQueue:
-              Type: AWS::SQS::Queue
+            MyBucket:
+              Type: AWS::S3::Bucket
               Properties:
-                QueueName: !Sub "${Environment}-my-queue"
+                InvalidProperty: this-property-does-not-exist
           EOF
 
       - id: action
@@ -48,10 +40,10 @@ jobs:
           reporter: local
           filter_mode: nofilter
           fail_level: none
-          working_directory: "infra/cloudformation"
-          cfn_lint_args: "stack.yaml"
+          cfn_lint_args: "$GITHUB_WORKSPACE/cfn-templates/invalid.yaml"
+          working_directory: "."
 
-      - name: Assert action completed with custom working directory
+      - name: Assert action completed (fail_level=none means no exit 1 even with lint errors)
         run: |
-          echo "Action completed with custom working_directory=infra/cloudformation"
+          echo "Action completed - fail_level=none so lint errors do not cause failure"
           echo "PASS"
