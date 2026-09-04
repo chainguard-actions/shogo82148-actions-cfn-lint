@@ -24,6 +24,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v4.72.0 | [`v4.72.0`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.72.0) | [`af2c73f`](https://github.com/shogo82148/actions-cfn-lint/commit/af2c73fc6a2a524af1e1ffbbe20e7bee947b9aa3) |
 | v4.73.0 | [`v4.73.0`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.73.0) | [`12c6fb2`](https://github.com/shogo82148/actions-cfn-lint/commit/12c6fb293083407d4a424e385e84b6bca872f071) |
 | v4.74.0 | [`v4.74.0`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.74.0) | [`9d5bebb`](https://github.com/shogo82148/actions-cfn-lint/commit/9d5bebbd17dd3d0999bf43134ba1abe57600355f) |
+| v4.74.1 | [`v4.74.1`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.74.1) | [`3f9883c`](https://github.com/shogo82148/actions-cfn-lint/commit/3f9883c3e139009e5b568b42d60e1efe3751dfcd) |
 
 ## Privacy
 
