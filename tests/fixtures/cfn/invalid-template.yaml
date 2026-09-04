@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: An invalid CloudFormation template with unknown properties
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      InvalidProperty: this-property-does-not-exist
+      BucketName: !Sub "${AWS::StackName}-bucket"
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      NotARealProperty: value
