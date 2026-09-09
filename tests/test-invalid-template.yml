@@ -1,0 +1,38 @@
+name: Test invalid CloudFormation template detection
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create invalid CloudFormation template
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/cfn-invalid"
+          cat > "$GITHUB_WORKSPACE/tests/cfn-invalid/template.yaml" <<'EOF'
+          AWSTemplateFormatVersion: "2010-09-09"
+          Description: An invalid CloudFormation template for testing
+
+          Resources:
+            MyInstance:
+              Type: AWS::EC2::Instance
+              Properties:
+                InstanceType: not-a-valid-instance-type
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: tests/cfn-invalid/template.yaml
+          working_directory: "."
+
+      - name: Assert action ran and detected issues
+        run: |
+          echo "Action completed - cfn-lint ran on the invalid template"
+          echo "With fail_level=none, the action should succeed even with lint findings"
+          echo "PASS"

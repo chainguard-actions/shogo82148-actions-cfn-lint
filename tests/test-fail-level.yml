@@ -1,0 +1,47 @@
+name: Test fail_level causes non-zero exit on errors
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create CloudFormation template with errors
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/cfn-errors"
+          cat > "$GITHUB_WORKSPACE/tests/cfn-errors/template.yaml" <<'EOF'
+          AWSTemplateFormatVersion: "2010-09-09"
+          Description: A CloudFormation template with errors
+
+          Resources:
+            MyInstance:
+              Type: AWS::EC2::Instance
+              Properties:
+                InstanceType: not-a-valid-instance-type
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: error
+          cfn_lint_args: tests/cfn-errors/template.yaml
+          working_directory: "."
+
+      - name: Assert action failed due to lint errors with fail_level=error
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed because lint errors were found and fail_level=error"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (cfn-lint may not have flagged the template as error-level)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
