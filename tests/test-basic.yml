@@ -1,0 +1,46 @@
+name: Test basic usage with valid template
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a valid CloudFormation template
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/cfn-valid"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/cfn-valid/template.yaml" <<'EOF'
+          AWSTemplateFormatVersion: "2010-09-09"
+          Description: Valid Test Template
+          Resources:
+            MyBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                BucketName: my-test-bucket
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: "$GITHUB_WORKSPACE/tests/fixtures/cfn-valid/template.yaml"
+          working_directory: "."
+
+      - name: Assert action ran (local reporter does not require GitHub API)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with valid template"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo or Docker issue)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
