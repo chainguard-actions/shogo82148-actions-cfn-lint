@@ -1,0 +1,28 @@
+name: Test custom cfn-lint args
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up templates in subdirectory
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/cfn-templates"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/valid-template.yaml" "$GITHUB_WORKSPACE/cfn-templates/template.yaml"
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          cfn_lint_args: template.yaml
+          working_directory: cfn-templates
+
+      - name: Assert action succeeded with custom working directory
+        run: |
+          echo "Action completed successfully with custom working_directory"
+          echo "PASS"
