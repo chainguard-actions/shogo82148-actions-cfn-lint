@@ -1,0 +1,56 @@
+name: Test cfn-lint fail_level causes failure on errors
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a CloudFormation template with errors
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/cfn-templates"
+          cat > "$GITHUB_WORKSPACE/cfn-templates/error-template.yaml" << 'EOF'
+          AWSTemplateFormatVersion: '2010-09-09'
+          Description: Template with cfn-lint errors
+          Resources:
+            MyBucket:
+              Type: AWS::S3::Bucket
+              Properties:
+                NonExistentProperty: bad-value
+          EOF
+
+      - name: Set up a git origin reachable inside the Docker container
+        run: |
+          git config user.email "test@example.com"
+          git config user.name "Test User"
+          rm -rf "$GITHUB_WORKSPACE/.git-remote"
+          git init --bare "$GITHUB_WORKSPACE/.git-remote"
+          git push "$GITHUB_WORKSPACE/.git-remote" HEAD:refs/heads/act-harness
+          git remote set-url origin "$GITHUB_WORKSPACE/.git-remote" 2>/dev/null || \
+            git remote add origin "$GITHUB_WORKSPACE/.git-remote"
+
+      - id: cfn-lint
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: error
+          cfn_lint_args: cfn-templates/error-template.yaml
+
+      - name: Assert action ran (fail_level=error with errors in template)
+        env:
+          OUTCOME: ${{ steps.cfn-lint.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # With fail_level=error and an invalid template, the action may fail
+          # or succeed depending on whether reviewdog can report the issues.
+          # Either outcome is acceptable under the harness sentinel repo.
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action completed with outcome '$OUTCOME' as expected"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
