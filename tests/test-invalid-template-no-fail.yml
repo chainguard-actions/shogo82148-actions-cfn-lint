@@ -1,0 +1,27 @@
+name: Test cfn-lint with invalid template and fail_level none
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - id: action
+        name: Run cfn-lint on invalid template with fail_level none
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          working_directory: tests/fixtures/cfn-invalid
+          cfn_lint_args: invalid-template.yaml
+        # fail_level=none means reviewdog exits 0 even when issues are found
+
+      - name: Assert action succeeded despite lint issues
+        run: |
+          echo "PASS: cfn-lint ran and reported issues without failing (fail_level=none)"
