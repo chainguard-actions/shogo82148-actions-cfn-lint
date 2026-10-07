@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A CloudFormation template with intentional lint errors
+
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-test-bucket
+      InvalidProperty: this-property-does-not-exist
