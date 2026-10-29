@@ -1,0 +1,6 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Valid test template
+
+Resources:
+  MyQueue:
+    Type: AWS::SQS::Queue

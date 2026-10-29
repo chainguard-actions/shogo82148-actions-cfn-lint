@@ -1,0 +1,6 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Valid test template discovered via .cfnlintrc
+
+Resources:
+  MyTopic:
+    Type: AWS::SNS::Topic
