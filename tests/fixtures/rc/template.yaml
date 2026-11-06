@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Test template with an EC2 instance
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      # ImageId is missing (E2522 / E3021-style error, ignored by .cfnlintrc)
+      InstanceType: t3.micro

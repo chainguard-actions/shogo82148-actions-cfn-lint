@@ -1,0 +1,6 @@
+templates:
+  - template.yaml
+
+ignore_checks:
+  - E2522 # older cfn-lint: "At least one of [ImageId, LaunchTemplate] should be specified"
+  - E3673 # cfn-lint 1.x: "'ImageId' is a required property"
