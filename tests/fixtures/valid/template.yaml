@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A valid template for testing cfn-lint
+Resources:
+  MyTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: my-test-topic
+Outputs:
+  TopicArn:
+    Value: !Ref MyTopic

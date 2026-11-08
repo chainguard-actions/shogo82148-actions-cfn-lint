@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: An invalid template for testing cfn-lint
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotARealProperty: foo
+  MyOther:
+    Type: AWS::S3::Buckett
+Outputs:
+  Missing:
+    Value: !Ref DoesNotExist
