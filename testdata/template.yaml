@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Test Template
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      # ImageId is missing
+      InstanceType: unknown # This is an invalid instance type
