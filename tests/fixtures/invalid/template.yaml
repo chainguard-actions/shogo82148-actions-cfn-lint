@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Invalid template for cfn-lint tests
+Resources:
+  Bucket:
+    Type: AWS::S3::NotARealResourceType
+Outputs:
+  BucketName:
+    Value: !Ref MissingResource
