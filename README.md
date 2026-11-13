@@ -42,6 +42,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v4.85.0 | [`v4.85.0`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.85.0) | [`8f60e81`](https://github.com/shogo82148/actions-cfn-lint/commit/8f60e818dbbd550c72912fe25452f330e2a4429d) | [`HARDENING.md`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/blob/v4.85.0/HARDENING.md) |
 | v4.86.0 | [`v4.86.0`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.86.0) | [`7d71553`](https://github.com/shogo82148/actions-cfn-lint/commit/7d71553a934291c930ad05b22a838dfec39804e8) | [`HARDENING.md`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/blob/v4.86.0/HARDENING.md) |
 | v4.86.1 | [`v4.86.1`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.86.1) | [`8ce78cb`](https://github.com/shogo82148/actions-cfn-lint/commit/8ce78cbbc1c6653ef60fd789657714027dd607f4) | [`HARDENING.md`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/blob/v4.86.1/HARDENING.md) |
+| v4.87.0 | [`v4.87.0`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/tree/v4.87.0) | [`f0c3654`](https://github.com/shogo82148/actions-cfn-lint/commit/f0c3654eb9ed0c83251c27dc613a3eb7058b3d64) | [`HARDENING.md`](https://github.com/chainguard-actions/shogo82148-actions-cfn-lint/blob/v4.87.0/HARDENING.md) |
 
 ## Privacy
 
