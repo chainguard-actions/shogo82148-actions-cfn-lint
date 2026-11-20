@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Invalid test template
+
+Resources:
+  MyThing:
+    Type: AWS::Fake::NotARealResource
+    Properties:
+      Foo: bar
