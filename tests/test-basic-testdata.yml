@@ -1,0 +1,33 @@
+name: Test basic usage with bundled .cfnlintrc
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare fixture with .cfnlintrc
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/rc"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/rc/.cfnlintrc" <<'EOF'
+          templates:
+            - template.yaml
+          EOF
+          cp "$GITHUB_WORKSPACE/tests/fixtures/invalid/template.yaml" "$GITHUB_WORKSPACE/tests/fixtures/rc/template.yaml"
+      - id: action
+        uses: .
+        with:
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          working_directory: tests/fixtures/rc
+      - name: Assert action succeeded (fail_level none never fails)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected success"
+            exit 1
+          fi
+          echo "PASS"
